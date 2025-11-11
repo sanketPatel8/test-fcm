@@ -16,28 +16,33 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 
 export const generateFcmTokenTest = async () => {
-  const supported = await isSupported();
-  if (!supported) {
-    console.log("🚫 This browser does not support Firebase Cloud Messaging.");
-    return null;
-  }
-
   try {
+    const supported = await isSupported();
+    if (!supported) {
+      console.warn("🚫 This browser does not support FCM.");
+      return null;
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      alert("⚠️ Notification permission not granted!");
+      return null;
+    }
+
     const messaging = getMessaging(app);
     const registration = await navigator.serviceWorker.register(
       "/firebase-messaging-sw.js"
     );
 
     const token = await getToken(messaging, {
-      vapidKey:
-        "BGmOXUYkskgMQ6IkOPy9xUeBf-qq5bw_EbbNMKL_SPCf2Ca6cELPxRv0I8bFJRYsbCV_nj0uxPpiYCVSx01SVeQ",
+      vapidKey: "YOUR_VAPID_KEY", // From Firebase Console → Project Settings → Cloud Messaging
       serviceWorkerRegistration: registration,
     });
 
-    console.log("✅ FCM Token:", token);
+    console.log("✅ Generated FCM Token:", token);
     return token;
-  } catch (err) {
-    console.error("❌ FCM Token error:", err);
+  } catch (error) {
+    console.error("❌ FCM Token error:", error);
     return null;
   }
 };

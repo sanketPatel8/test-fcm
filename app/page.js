@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { generateFcmTokenTest } from "./firebase";
 
 export default function Home() {
-  const [UToken, setUToken] = useState(null);
+  const [fcmToken, setFcmToken] = useState(null);
 
   useEffect(() => {
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -20,9 +20,7 @@ export default function Home() {
     }
 
     if (isIOS && !isStandalone) {
-      alert(
-        "📱 Please add this app to your Home Screen in Safari to enable notifications."
-      );
+      alert("📱 Please add this app to your Home Screen in Safari first.");
       return;
     }
 
@@ -31,38 +29,45 @@ export default function Home() {
     async function initFCM() {
       const token = await generateFcmTokenTest();
       if (token) {
-        alert("✅ Got FCM Token:\n" + token);
-        setUToken(token); // ✅ Update state
+        alert("✅ Got FCM Token!");
+        setFcmToken(token);
       } else {
-        alert(
-          "🚫 Push notifications not supported on this device/browser.",
-          token
-        );
-        setUToken(token);
+        alert("🚫 Push notifications not supported on this device/browser.");
       }
     }
   }, []);
 
   return (
-    <main style={{ textAlign: "center", padding: "50px" }}>
+    <main
+      style={{
+        textAlign: "center",
+        padding: "50px",
+        fontFamily: "sans-serif",
+      }}
+    >
       <h1>🔔 Firebase Push Notification Setup</h1>
-      <p>Open this in Safari → Add to Home Screen → Then reopen the app.</p>
+      <p>Open this site in Safari → Add to Home Screen → Then reopen it.</p>
 
-      <div>
-        <h3>✅ Your FCM Token:</h3>
-        <code
-          style={{
-            display: "block",
-            background: "#f4f4f4",
-            padding: "10px",
-            borderRadius: "8px",
-            wordBreak: "break-all",
-            color: "#333",
-          }}
-        >
-          {UToken}
-        </code>
-      </div>
+      {fcmToken ? (
+        <div>
+          <h3>✅ Your FCM Token:</h3>
+          <code
+            style={{
+              display: "block",
+              background: "#f4f4f4",
+              padding: "10px",
+              borderRadius: "8px",
+              wordBreak: "break-all",
+              color: "#333",
+              marginTop: "10px",
+            }}
+          >
+            {fcmToken}
+          </code>
+        </div>
+      ) : (
+        <p>🔄 Waiting for token...</p>
+      )}
     </main>
   );
 }
