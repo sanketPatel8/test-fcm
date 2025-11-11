@@ -1,16 +1,20 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { generateFcmTokenTest } from "./firebase";
 
 export default function Home() {
-  const [fcmToken, setFcmToken] = useState(null);
+  const [token, setToken] = useState(null);
+  const [isIosSafari, setIsIosSafari] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const isStandalone = window.matchMedia(
-      "(display-mode: standalone)"
-    ).matches;
-    const isChrome = /CriOS/i.test(navigator.userAgent);
+    const ua = navigator.userAgent;
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+    const isChrome = /CriOS/i.test(ua);
+    const standalone = window.matchMedia("(display-mode: standalone)").matches;
+
+    setIsIosSafari(isIOS && !isChrome);
+    setIsStandalone(standalone);
 
     if (isIOS && isChrome) {
       alert(
@@ -19,54 +23,64 @@ export default function Home() {
       return;
     }
 
-    if (isIOS && !isStandalone) {
-      alert("📱 Please add this app to your Home Screen in Safari first.");
+    if (isIOS && !standalone) {
+      alert(
+        "📱 Please add this app to your Home Screen in Safari first to enable notifications."
+      );
       return;
     }
 
-    initFCM();
-
-    async function initFCM() {
-      const token = await generateFcmTokenTest();
-      if (token) {
-        alert("✅ Got FCM Token!");
-        setFcmToken(token);
-      } else {
-        alert("🚫 Push notifications not supported on this device/browser.");
-      }
+    // On Android/Desktop, directly initialize
+    if (!isIOS) {
+      handleGenerateToken();
     }
   }, []);
 
-  return (
-    <main
-      style={{
-        textAlign: "center",
-        padding: "50px",
-        fontFamily: "sans-serif",
-      }}
-    >
-      <h1>🔔 Firebase Push Notification Setup</h1>
-      <p>Open this site in Safari → Add to Home Screen → Then reopen it.</p>
+  const handleGenerateToken = async () => {
+    const t = await generateFcmTokenTest();
+    if (t) {
+      setToken(t);
+      console.log("✅ FCM Token:", t);
+    } else {
+      console.log("❌ Failed to get FCM token");
+    }
+  };
 
-      {fcmToken ? (
-        <div>
-          <h3>✅ Your FCM Token:</h3>
-          <code
+  return (
+    <main style={{ textAlign: "center", padding: "40px" }}>
+      <h1>🔔 Firebase Push Notifications Test</h1>
+
+      {isIosSafari && isStandalone && (
+        <>
+          <p>
+            ✅ You’re using iOS PWA mode. Tap the button below to enable push
+            notifications.
+          </p>
+          <button
+            onClick={handleGenerateToken}
             style={{
-              display: "block",
-              background: "#f4f4f4",
-              padding: "10px",
+              backgroundColor: "#007bff",
+              color: "#fff",
+              border: "none",
+              padding: "12px 20px",
               borderRadius: "8px",
-              wordBreak: "break-all",
-              color: "#333",
-              marginTop: "10px",
+              fontSize: "16px",
             }}
           >
-            {fcmToken}
-          </code>
+            Enable Notifications
+          </button>
+        </>
+      )}
+
+      {!isIosSafari && (
+        <p>Token auto-generates for Android & Desktop browsers.</p>
+      )}
+
+      {token && (
+        <div style={{ marginTop: "20px", wordBreak: "break-all" }}>
+          <h3>✅ Your FCM Token:</h3>
+          <code>{token}</code>
         </div>
-      ) : (
-        <p>🔄 Waiting for token...</p>
       )}
     </main>
   );
