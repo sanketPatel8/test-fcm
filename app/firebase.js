@@ -109,7 +109,8 @@ export const generateFcmTokenTest = async () => {
     const messaging = getMessaging(app);
 
     const token = await getToken(messaging, {
-      vapidKey: "YOUR_VAPID_KEY", // Replace with your real VAPID key
+      vapidKey:
+        "BGmOXUYkskgMQ6IkOPy9xUeBf-qq5bw_EbbNMKL_SPCf2Ca6cELPxRv0I8bFJRYsbCV_nj0uxPpiYCVSx01SVeQ", // Replace with your real VAPID key
       serviceWorkerRegistration: registration,
     });
 
